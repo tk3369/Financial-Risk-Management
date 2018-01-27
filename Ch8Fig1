@@ -6,6 +6,7 @@ Sqrt12=12**0.5
 targetsd=18.55/Sqrt12
 Nyears=90           #Number of years of virtual reality
 VirtualReality=[]
+random.seed(3.14159265)
 for x in range(12*Nyears):
     VirtualReality.append(random.gauss(0,targetsd))
 
