@@ -1,0 +1,49 @@
+import numpy
+import random
+import matplotlib.pyplot as plt
+
+Sqrt12=12**0.5
+targetsd=18.55/Sqrt12
+Nyears=90           #Number of years of virtual reality
+VirtualReality=[]
+for x in range(12*Nyears):
+    VirtualReality.append(random.gauss(0,targetsd))
+
+#VirtualReality now contains Nyears months' sample
+#of normal variates mean 0 stddev targetsd
+    
+#Generate sample standard deviations
+SampleSd=[]
+for lookback in [12,36,60]:
+    Sds=[]  #Save lookback-length SD's in SdS
+    for x in range(0,12*Nyears-lookback):
+        StdDev=numpy.std(\
+        VirtualReality[x:x+lookback])
+        Sds.append(StdDev*Sqrt12)
+    SampleSd.append(Sds)   #Add a row to SampleSd
+
+#Generate date array
+Date=[]
+Year,Month=1927,1
+for x in range(12*Nyears):
+    Date.append(Year)
+    Month+=1
+    if (Month==13):
+        Year+=1
+        Month=1
+
+#Graph
+fig, ax = plt.subplots()
+ax.plot(Date[12:], SampleSd[0], 'y-', label='12 month')
+ax.plot(Date[36:], SampleSd[1], 'b-', label='36 month')
+ax.plot(Date[60:], SampleSd[2], 'r-', label='60 month')
+
+legend = ax.legend(loc='upper right', shadow=False, fontsize='medium')
+
+plt.title('Figure 1')
+plt.xlabel('Date')
+plt.ylabel('Sample SDs')
+plt.axis([min(Date),max(Date),0,70])
+for label in ax.xaxis.get_ticklabels():
+    label.set_rotation(45)
+plt.show()
