@@ -1,64 +1,37 @@
-import requests
 import numpy
-import zipfile
-import tempfile
-import math
+import random
 import matplotlib.pyplot as plt
 
-#get Fama French 3 factor data from French's website
-FFurl='http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip'
-r = requests.get(FFurl, allow_redirects=True)
-#Store FF zip file in a temp file
-tmp = tempfile.NamedTemporaryFile(delete=True)
-tmp.write(r.content)
-zf=zipfile.ZipFile(tmp)
-for FFfile in zf.namelist():
-    FFdata = zf.read(FFfile)
-    print('Reading FF data file')
-tmp.close()  # deletes the temp file
+Sqrt12=12**0.5
+targetsd=18.55/Sqrt12
+NMonths=91*12+6           #Number of months of virtual reality
+VirtualReality=[]
+random.seed(3.14159265)
+for x in range(NMonths):
+    VirtualReality.append(random.gauss(0,targetsd))
 
-#Split up the Fama-French data (after header) into words
-words=repr(FFdata[162:]).split()
-
-#Parse the Fama-French data
-#dates (YYYYMM format),Mkt-RF,SMB,HML,RF
-Date=[]
-market_minus_rf=[]
-SMB=[]
-HML=[]
-RF=[]
-Date.append(float(words[0][2:8])/100.0)   #Extract first YYYYMM date
-x=1
-while True:
-    market_minus_rf.append(float(words[x][0:len(words[x])-1])) 
-    SMB.append(float(words[x+1][0:len(words[x+1])-1]))
-    HML.append(float(words[x+2][0:len(words[x+2])-1]))
-    l3=len(words[x+3])
-    try:  #Next period date; this period RF
-        NxtDate=int(words[x+3][l3-7:l3-1])  #Generate error if done
-        Date.append(float(NxtDate)/100.0)
-        RF.append(float(words[x+3][:l3-11]))
-        x+=4
-    except ValueError: #Last data line; remove returns and newlines
-        RF.append(float(words[x+3][:l3-8]))
-        break
-
-#Change to log-returns
-ActualReality=[]
-for x in range(len(market_minus_rf)):
-    ActualReality.append(100.0*math.log(1+\
-    (market_minus_rf[x]+RF[x])/100.))
-
+#VirtualReality now contains Nmonths sample
+#of normal variates mean 0 stddev targetsd
+    
 #Generate sample standard deviations
 SampleSd=[]
-Sqrt12=12.0**0.5
 for lookback in [12,36,60]:
     Sds=[]  #Save lookback-length SD's in SdS
-    for x in range(0,len(ActualReality)-lookback):
+    for x in range(0,NMonths-lookback):
         StdDev=numpy.std(\
-        ActualReality[x:x+lookback])
+        VirtualReality[x:x+lookback])
         Sds.append(StdDev*Sqrt12)
     SampleSd.append(Sds)   #Add a row to SampleSd
+
+#Generate date array
+Date=[]
+Year,Month=1926,7
+for x in range(NMonths):
+    Date.append(float(Year+Month/100.0))
+    Month+=1
+    if (Month==13):
+        Year+=1
+        Month=1
 
 #Graph
 StubOffset=6  #First six months are stub dates
@@ -71,7 +44,7 @@ for label in ax.xaxis.get_ticklabels():
 legend = ax.legend(loc='upper right', shadow=False, fontsize='medium')
 ax.grid()
 
-plt.title('Figure 2')
+plt.title('Figure 1')
 plt.ylabel('Sample SDs')
 plt.axis([min(Date),max(Date),0,70])
 plt.show()
