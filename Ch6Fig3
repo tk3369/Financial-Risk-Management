@@ -3,6 +3,7 @@ import numpy
 import zipfile
 import tempfile
 import math
+import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
 #get Fama French 3 factor data from French's website
@@ -14,7 +15,6 @@ tmp.write(r.content)
 zf=zipfile.ZipFile(tmp)
 for FFfile in zf.namelist():
     FFdata = zf.read(FFfile)
-    print('Reading FF data file')
 tmp.close()  # deletes the temp file
 
 #Split up the Fama-French data (after header) into words
@@ -48,30 +48,32 @@ ActualReality=[]
 for x in range(len(market_minus_rf)):
     ActualReality.append(100.0*math.log(1+\
     (market_minus_rf[x]+RF[x])/100.))
+StubOffset=6
+mu=numpy.average(ActualReality[StubOffset:])
+sigma=numpy.std(ActualReality[StubOffset:])
+        
+#Generate histogram
+#put infinite bins at the ends
+minhist=-15
+maxhist=15
+stepsize=1.5
+bins=[]
+bins.append(float('-inf'))
+bins.append(minhist)
+for x in range(int((maxhist-minhist)/stepsize)):
+    bins.append(bins[x+1]+stepsize)
+bins.append(float('inf'))
 
-#Generate sample standard deviations
-SampleSd=[]
-Sqrt12=12.0**0.5
-for lookback in [12,36,60]:
-    Sds=[]  #Save lookback-length SD's in SdS
-    for x in range(0,len(ActualReality)-lookback):
-        StdDev=numpy.std(\
-        ActualReality[x:x+lookback])
-        Sds.append(StdDev*Sqrt12)
-    SampleSd.append(Sds)   #Add a row to SampleSd
-
-#Graph
-StubOffset=6  #First six months are stub dates
-fig, ax = plt.subplots()
-ax.plot(Date[12+StubOffset:], SampleSd[0][StubOffset:], 'y-', label='12 month')
-ax.plot(Date[36+StubOffset:], SampleSd[1][StubOffset:], 'b-', label='36 month')
-ax.plot(Date[60+StubOffset:], SampleSd[2][StubOffset:], 'r-', label='60 month')
-for label in ax.xaxis.get_ticklabels():
-    label.set_rotation(45)
-legend = ax.legend(loc='upper right', shadow=False, fontsize='medium')
-ax.grid()
-
-plt.title('Figure 2')
-plt.ylabel('Sample SDs')
-plt.axis([min(Date),max(Date),0,70])
+n, bins, patches = plt.hist(\
+ActualReality[StubOffset:], bins, normed=1, facecolor='blue', alpha=0.5)
+ 
+# add a 'best fit' line
+y = mlab.normpdf(bins, mu, sigma)
+plt.plot(bins, y, 'r--')
+#plt.xlabel('Smarts')
+#plt.ylabel('Probability')
+plt.title(r'Figure 3')
+ 
+# Tweak spacing to prevent clipping of ylabel
+plt.subplots_adjust(left=0.15)
 plt.show()
