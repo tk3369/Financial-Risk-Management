@@ -1,0 +1,70 @@
+import requests
+import zipfile
+import math
+import matplotlib
+
+FFurl='http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip'
+r = requests.get(FFurl, allow_redirects=True)
+FFlocal='FF.zip'
+open(FFlocal, 'wb').write(r.content)
+zf = zipfile.ZipFile(FFlocal, 'r')
+for FFfile in zf.namelist():
+    FFdata = zf.read(FFfile)
+words=repr(FFdata[162:]).split()
+#Parse the Fama-French data
+#Mkt-RF,SMB,HML,RF
+dates=[]
+market_minus_rf=[]
+SMB=[]
+HML=[]
+RF=[]
+dates.append(int(words[0][2:8]))   #Extract first YYYYMM date
+x=1
+while True:
+    market_minus_rf.append(float(words[x][0:len(words[x])-1])) 
+    SMB.append(float(words[x+1][0:len(words[x+1])-1]))
+    HML.append(float(words[x+2][0:len(words[x+2])-1]))
+    l3=len(words[x+3])
+    try:  #Next period date; this period RF
+        dates.append(int(words[x+3][l3-7:l3-1]))
+        RF.append(float(words[x+3][:l3-11]))
+        x+=4
+    except ValueError: #Last data line; remove returns and newlines
+        RF.append(float(words[x+3][:l3-8]))
+        break
+
+#Change to log-returns
+ActualReality=[]
+for x in range(len(market_minus_rf)):
+    ActualReality.append(100.0*math.log(1+\
+    (market_minus_rf[x]+RF[x])/100.))
+
+Nyears=int(len(ActualReality)/12)
+#ActualReality now contains Nyears months' sample
+#of normal variates mean 0 stddev targetsd
+    
+#Generate sample standard deviations
+SampleSd=[]
+Sqrt12=12.0**0.5
+for lookback in [12,36,60]:
+    Sds=[]  #Save lookback-length SD's in SdS
+    for x in range(0,12*Nyears-lookback):
+        StdDev=numpy.std(\
+        ActualReality[x:x+lookback])
+        Sds.append(StdDev*Sqrt12)
+    SampleSd.append(Sds)   #Add a row to SampleSd
+
+#Graph
+fig, ax = plt.subplots()
+ax.plot(Date[12:], SampleSd[0], 'y-', label='12 month')
+ax.plot(Date[36:], SampleSd[1], 'b-', label='36 month')
+ax.plot(Date[60:], SampleSd[2], 'r-', label='60 month')
+for label in ax.xaxis.get_ticklabels():
+    label.set_rotation(45)
+legend = ax.legend(loc='upper right', shadow=False, fontsize='medium')
+ax.grid()
+
+plt.title('Figure 2')
+plt.ylabel('Sample SDs')
+plt.axis([min(Date),max(Date),0,70])
+plt.show()
