@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 
 Sqrt12=12**0.5
-targetsd=18.55/Sqrt12
+targetsd=18.49/Sqrt12
 NMonths=91*12+6           #Number of months of virtual reality
 VirtualReality=[]
 random.seed(3.14159265)
