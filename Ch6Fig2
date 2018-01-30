@@ -6,48 +6,58 @@ import math
 import matplotlib.pyplot as plt
 
 #get Fama French 3 factor data from French's website
-FFurl='http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip'
-r = requests.get(FFurl, allow_redirects=True)
-#Store FF zip file in a temp file
-tmp = tempfile.NamedTemporaryFile(delete=True)
-tmp.write(r.content)
-zf=zipfile.ZipFile(tmp)
-for FFfile in zf.namelist():
-    FFdata = zf.read(FFfile)
-    print('Reading FF data file')
-tmp.close()  # deletes the temp file
+def getFamaFrench3():
+    FFurl='http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip'
+    r = requests.get(FFurl, allow_redirects=True)
+    #Store FF zip file in a temp file
+    tmp = tempfile.NamedTemporaryFile(delete=True)
+    tmp.write(r.content)
+    zf=zipfile.ZipFile(tmp)
+    for FFfile in zf.namelist():
+        FFdata = zf.read(FFfile)
+    tmp.close()  # deletes the temp file
 
-#Split up the Fama-French data (after header) into words
-words=repr(FFdata[162:]).split()
+    #Split up the Fama-French data (after header) into words
+    words=repr(FFdata[162:]).split()
 
-#Parse the Fama-French data
-#dates (YYYYMM format),Mkt-RF,SMB,HML,RF
-Date=[]
-market_minus_rf=[]
-SMB=[]
-HML=[]
-RF=[]
-Date.append(float(words[0][2:8])/100.0)   #Extract first YYYYMM date
-x=1
-while True:
-    market_minus_rf.append(float(words[x][0:len(words[x])-1])) 
-    SMB.append(float(words[x+1][0:len(words[x+1])-1]))
-    HML.append(float(words[x+2][0:len(words[x+2])-1]))
-    l3=len(words[x+3])
-    try:  #Next period date; this period RF
-        NxtDate=int(words[x+3][l3-7:l3-1])  #Generate error if done
-        Date.append(float(NxtDate)/100.0)
-        RF.append(float(words[x+3][:l3-11]))
-        x+=4
-    except ValueError: #Last data line; remove returns and newlines
-        RF.append(float(words[x+3][:l3-8]))
-        break
+    #Parse the Fama-French data
+    #dates (YYYYMM format),Mkt-RF,SMB,HML,RF
+    Date=[]
+    market_minus_rf=[]
+    SMB=[]
+    HML=[]
+    RF=[]
+    Date.append(float(words[0][2:8])/100.0)   #Extract first YYYYMM date
+    x=1
+    while True:
+        market_minus_rf.append(float(words[x][0:len(words[x])-1])) 
+        SMB.append(float(words[x+1][0:len(words[x+1])-1]))
+        HML.append(float(words[x+2][0:len(words[x+2])-1]))
+        l3=len(words[x+3])
+        try:  #Next period date; this period RF
+            NxtDate=int(words[x+3][l3-7:l3-1])  #Generate error if done
+            Date.append(float(NxtDate)/100.0)
+            RF.append(float(words[x+3][:l3-11]))
+            x+=4
+        except ValueError: #Last data line; remove returns and newlines
+            RF.append(float(words[x+3][:l3-8]))
+            break
+    #Return the output lists
+    return(Date,market_minus_rf,SMB,HML,RF)
+#Done with getFamaFrench3
 
-#Change to log-returns
-ActualReality=[]
-for x in range(len(market_minus_rf)):
-    ActualReality.append(100.0*math.log(1+\
-    (market_minus_rf[x]+RF[x])/100.))
+#Change returns in format 5.0=5% to log-returns log(1.05)
+#Also add back a risk-free rate
+def LogReturnConvert(Ret100,RF):
+    LogReturns=[]
+    for x in range(len(Ret100)):
+        LogReturns.append(100.0*math.log(1+\
+        (Ret100[x]+RF[x])/100.))  
+    return(LogReturns)
+#Done with LogReturnConvert
+
+Date,market_minus_rf,SMB,HML,RF=getFamaFrench3()
+ActualReality=LogReturnConvert(market_minus_rf,RF)
 
 #Generate sample standard deviations
 SampleSd=[]
