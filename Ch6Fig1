@@ -1,7 +1,7 @@
 import numpy
 import random
 import matplotlib.pyplot as plt
-import 'https://github.com/kjwinston52/Financial-Risk-Management/blob/master/Functions'
+import frmbook_funcs
 
 #Generate virtual reality
 #Hardcoded: 91.5 years, annual standard deviation 18.49%
@@ -26,6 +26,6 @@ for x in range(NMonths):
         Year+=1
         Month=1
 
-SampleSd=GetSampleSd(VirtualReality,[12,36,60])
-PlotSampleSd('Figure 1',Date,SampleSd,StubOffset=6,\
+SampleSd=frmbook_funcs.GetSampleSd(VirtualReality,[12,36,60])
+frmbook_funcs.PlotSampleSd('Figure 1',Date,SampleSd,StubOffset=6,\
 lookbacks=[12,36,60],['y-','b-','r-'])
