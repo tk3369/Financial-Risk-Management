@@ -26,6 +26,9 @@ for x in range(NMonths):
         Year+=1
         Month=1
 
-SampleSd=frmbook_funcs.GetSampleSd(VirtualReality,[12,36,60])
-frmbook_funcs.PlotSampleSd('Figure 1',Date,SampleSd,StubOffset=6,\
-lookbacks=[12,36,60],['y-','b-','r-'])
+lookbacks=[12,36,60]
+SampleSd=frmbook_funcs.GenSampleSd(VirtualReality,lookbacks)
+StubOffset=6
+colors=['y-','b-','r-']
+frmbook_funcs.PlotSampleSd('Figure 1',Date,SampleSd,StubOffset,\
+lookbacks,colors)
