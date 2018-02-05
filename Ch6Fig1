@@ -1,6 +1,4 @@
-import numpy
 import random
-import matplotlib.pyplot as plt
 import frmbook_funcs
 
 #Generate virtual reality
