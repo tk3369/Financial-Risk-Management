@@ -16,11 +16,9 @@ minhist=-15
 maxhist=15
 stepsize=1.5
 bins=[]
-bins.append(float('-inf'))
 bins.append(minhist)
 for x in range(int((maxhist-minhist)/stepsize)):
-    bins.append(bins[x+1]+stepsize)
-bins.append(float('inf'))
+    bins.append(bins[x]+stepsize)
 
 n, bins, patches = plt.hist(\
 ActualReality[StubOffset:], bins, normed=1, facecolor='blue', alpha=0.5)
